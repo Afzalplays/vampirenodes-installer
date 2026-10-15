@@ -20,19 +20,21 @@ pause() {
     read -rp "Press Enter to continue..."
 }
 
+
 banner() {
     clear
     echo -e "${BRIGHT_RED}"
-    echo " __     __                    _              "
-    echo " \ \   / /_ _ _ __ ___  _ __ (_)_ __   ___  "
-    echo "  \ \ / / _\` | '_ \` _ \| '_ \| | '_ \ / _ \\"
-    echo "   \ V / (_| | | | | | | |_) | | | | |  __/"
-    echo "    \_/ \__,_|_| |_| |_| .__/|_|_| |_|\___|"
-    echo "                       |_|                  "
+    echo "██╗   ██╗ █████╗ ███╗   ███╗██████╗ ██╗██████╗ ███████╗"
+    echo "██║   ██║██╔══██╗████╗ ████║██╔══██╗██║██╔══██╗██╔════╝"
+    echo "██║   ██║███████║██╔████╔██║██████╔╝██║██████╔╝█████╗  "
+    echo "╚██╗ ██╔╝██╔══██║██║╚██╔╝██║██╔═══╝ ██║██╔══██╗██╔══╝  "
+    echo " ╚████╔╝ ██║  ██║██║ ╚═╝ ██║██║     ██║██║  ██║███████╗"
+    echo "  ╚═══╝  ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝"
     echo -e "${RESET}"
-    echo -e "${WHITE}       OBSIDIAN CONTROL CENTER${RESET}"
-    echo -e "${GRAY}       VampireNodes Installer v${VERSION}${RESET}"
-    echo "------------------------------------------------"
+    echo
+    echo -e "${WHITE}          VAMPIRE STUDIO${RESET}"
+    echo -e "${GRAY}          CONTROL CENTER v${VERSION}${RESET}"
+    echo "========================================================"
     echo
 }
 
