@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 
 # ==========================================
-# VampireNodes - Obsidian Control Center
+# VampireNodes - Control Center
 # Official domain: vampirenodes.in
 # ==========================================
 
@@ -30,16 +30,35 @@ pause() {
 
 
 
-banner() {
+
+dashboard() {
     clear
-    echo -e "${BRIGHT_RED}"
+
+    local cpu ram network hostname_name
+    hostname_name=$(hostname 2>/dev/null || echo "Unknown")
+
+    cpu=$(top -bn1 2>/dev/null |
+        awk '/Cpu\(s\)/ {printf "%.0f%%", 100-$8; found=1}
+             END {if (!found) printf "N/A"}')
+
+    ram=$(free 2>/dev/null |
+        awk '/Mem:/ {if ($2>0) printf "%.0f%%", $3/$2*100;
+                     else print "N/A"}')
+
+    if command -v ip >/dev/null 2>&1 &&
+       ip route get 1.1.1.1 >/dev/null 2>&1; then
+        network="${GREEN}● CONNECTED${RESET}"
+    else
+        network="${RED}● NOT CONNECTED${RESET}"
+    fi
+
+    echo -e "${BRIGHT_RED}${BOLD}"
     echo "██╗   ██╗ █████╗ ███╗   ███╗██████╗ ██╗██████╗ ███████╗"
     echo "██║   ██║██╔══██╗████╗ ████║██╔══██╗██║██╔══██╗██╔════╝"
     echo "██║   ██║███████║██╔████╔██║██████╔╝██║██████╔╝█████╗  "
     echo "╚██╗ ██╔╝██╔══██║██║╚██╔╝██║██╔═══╝ ██║██╔══██╗██╔══╝  "
     echo " ╚████╔╝ ██║  ██║██║ ╚═╝ ██║██║     ██║██║  ██║███████╗"
     echo "  ╚═══╝  ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚══════╝"
-    echo
     echo " ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗ "
     echo " ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗"
     echo " ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║"
@@ -47,150 +66,61 @@ banner() {
     echo " ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝"
     echo " ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝ "
     echo -e "${RESET}"
+
+    echo -e "${WHITE}${BOLD}       CONTROL CENTER${RESET}"
+    echo -e "${GRAY}       Host: ${hostname_name} | Version: ${VERSION}${RESET}"
     echo
-    echo -e "${WHITE}          VAMPIRE STUDIO${RESET}"
-    echo -e "${GRAY}        CONTROL CENTER VERSION ${VERSION}${RESET}"
-    echo "========================================================"
+    echo -e "${CYAN}◉ SYSTEM STATUS${RESET}"
+    echo -e "   CPU Usage: ${YELLOW}${cpu}${RESET}    RAM Usage: ${YELLOW}${ram}${RESET}    Network: ${network}"
     echo
-}
-
-require_root() {
-    if [[ "${EUID}" -ne 0 ]]; then
-        echo -e "${RED}Run this option as root (or with sudo).${RESET}"
-        return 1
-    fi
-}
-
-system_info() {
-    banner
-    echo -e "${WHITE}SYSTEM INFORMATION${RESET}"
-    echo "------------------------------------------------"
-    printf "Hostname : "; hostname
-    printf "OS       : "
-    if [[ -r /etc/os-release ]]; then
-        . /etc/os-release
-        echo "${PRETTY_NAME:-Unknown}"
-    else
-        echo "Unknown"
-    fi
-    printf "Kernel   : "; uname -r
-    printf "Arch     : "; uname -m
-    printf "Uptime   : "; uptime -p 2>/dev/null || uptime
+    echo -e "${MAGENTA} DEPLOYMENT & SERVICES${RESET}"
+    echo -e " ${CYAN}├─ ${WHITE}[1]${RESET} VPS / System Info    ${CYAN}├─ ${WHITE}[5]${RESET} Themes"
+    echo -e " ${CYAN}├─ ${WHITE}[2]${RESET} Panel                ${CYAN}├─ ${WHITE}[6]${RESET} System"
+    echo -e " ${CYAN}├─ ${WHITE}[3]${RESET} Wings                ${CYAN}├─ ${WHITE}[7]${RESET} Container"
+    echo -e " ${CYAN}└─ ${WHITE}[8]${RESET} New Module"
     echo
-    if command -v free >/dev/null 2>&1; then
-        free -h
-    fi
+    echo -e "${MAGENTA} MAINTENANCE & TOOLS${RESET}"
+    echo -e " ${CYAN}├─ ${WHITE}[4]${RESET} Toolbox              ${CYAN}└─ ${WHITE}[0]${RESET} Exit"
+    echo -e " ${CYAN}└─ ${WHITE}[9]${RESET} Extras"
     echo
-    if command -v df >/dev/null 2>&1; then
-        df -h /
-    fi
-    pause
-}
-
-update_system() {
-    banner
-    echo "This option updates package lists and installed packages."
-    echo "It may restart services or change system packages."
-    echo
-    read -rp "Continue? Type YES: " confirm
-    [[ "$confirm" == "YES" ]] || return 0
-
-    require_root || return 1
-
-    if command -v apt-get >/dev/null 2>&1; then
-        apt-get update
-        apt-get upgrade -y
-    elif command -v dnf >/dev/null 2>&1; then
-        dnf upgrade -y
-    elif command -v yum >/dev/null 2>&1; then
-        yum update -y
-    else
-        echo "Unsupported package manager."
-        pause
-        return 1
-    fi
-
-    echo -e "${BRIGHT_RED}System update completed.${RESET}"
-    pause
-}
-
-panel_info() {
-    banner
-    echo "PTERODACTYL PANEL"
-    echo "------------------------------------------------"
-    echo "This option is reserved for the Panel installer."
-    echo
-    echo "Before adding automatic installation, configure:"
-    echo "  - Supported operating system"
-    echo "  - Domain name and DNS"
-    echo "  - HTTPS certificate"
-    echo "  - Database credentials"
-    echo "  - Firewall and backups"
-    echo
-    echo "No Panel has been installed by this menu."
-    pause
-}
-
-wings_info() {
-    banner
-    echo "PTERODACTYL WINGS"
-    echo "------------------------------------------------"
-    echo "This option is reserved for the Wings installer."
-    echo
-    echo "Before installation, configure:"
-    echo "  - Existing Pterodactyl Panel"
-    echo "  - Node FQDN and DNS"
-    echo "  - Daemon port and HTTPS"
-    echo "  - Docker and firewall"
-    echo
-    echo "No Wings service has been installed by this menu."
-    pause
-}
-
-modules_menu() {
-    while true; do
-        banner
-        echo "MODULES"
-        echo "------------------------------------------------"
-        echo "1) System information"
-        echo "2) Update system packages"
-        echo "0) Back"
-        echo
-        read -rp "VampireNodes Modules > " choice
-
-        case "$choice" in
-            1) system_info ;;
-            2) update_system ;;
-            0) return ;;
-            *) echo "Invalid option."; sleep 1 ;;
-        esac
-    done
+    echo -e "${GRAY}────────────────────────────────────────────────────────────────────────${RESET}"
 }
 
 main_menu() {
     while true; do
-        banner
-        echo " 1) VPS / System Information"
-        echo " 2) Install Pterodactyl Panel (not configured)"
-        echo " 3) Install Wings (not configured)"
-        echo " 4) Modules"
-        echo " 5) Update System Packages"
-        echo " 0) Exit"
+        dashboard
         echo
-        read -rp "VampireNodes > " choice
+        echo -ne "${BRIGHT_RED}${BOLD} ➜ Enter Option (0-9) ${RESET}"
+        read -r choice
 
         case "$choice" in
             1) system_info ;;
             2) panel_info ;;
             3) wings_info ;;
             4) modules_menu ;;
-            5) update_system ;;
+            5)
+                echo "Themes module is not configured yet."
+                pause
+                ;;
+            6) system_info ;;
+            7)
+                echo "Container management is not configured yet."
+                pause
+                ;;
+            8)
+                echo "New modules will be added here."
+                pause
+                ;;
+            9)
+                echo "Extras module is not configured yet."
+                pause
+                ;;
             0)
-                echo "Thank you for using VampireNodes."
+                echo -e "${GREEN}Vampire Studio shutting down the menu.${RESET}"
                 exit 0
                 ;;
             *)
-                echo "Invalid option."
+                echo -e "${RED}Invalid option. Choose 0-9.${RESET}"
                 sleep 1
                 ;;
         esac
