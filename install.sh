@@ -13,7 +13,7 @@ show_banner() {
     echo -e "${RED}"
     echo "======================================"
     echo "       VAMPIRE NODES"
-    echo "       OBSIDIAN CONTROL CENTER"
+    echo "       CONTROL CENTER"
     echo "======================================"
     echo -e "${RESET}"
 }
